@@ -4,9 +4,12 @@ using UnityEngine;
 
 public class MazeViewer : MonoBehaviour
 {
-    public Maze MazeToView;
+    public int Width = 19;
+    public int Height = 19;
     public GameObject WallStyle;
     public List<MazeBall> Balls;
+
+    private Maze MazeToView;
 
     void Start()
     {
@@ -14,9 +17,10 @@ public class MazeViewer : MonoBehaviour
     }
     private void Test1()
     {
-        MazeToView = new();
-        MazeToView.GenerateMaze();
+        MazeToView = new(Width, Height);
+        MazeToView.GenerateByPrims();
         BuildWalls();
+        FitScreen();
     }
 
     public void BuildWalls()
@@ -35,6 +39,14 @@ public class MazeViewer : MonoBehaviour
             GameObject newWall = Instantiate(WallStyle, transform, true);
             newWall.transform.position = upperLeftPosition + new Vector2(w, -h);
         }
+    }
+
+    /// <summary>
+    /// Resize the maze so that it fits the screen
+    /// </summary>
+    public void FitScreen()
+    {
+        transform.localScale *= 0.9f * 19.5f / Height;
     }
 
     public void Step()

@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 8179098217967153842}
   - component: {fileID: 8179098217967153841}
-  - component: {fileID: 8179098217967153840}
   m_Layer: 0
   m_Name: Maze
   m_TagString: Untagged
@@ -45,20 +44,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee3df1d332b3a4ce6980de4f7fa87da0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MazeToView: {fileID: 0}
+  Width: 31
+  Height: 31
   WallStyle: {fileID: 5676772466091745337, guid: 4a0c3cb72421f4d23bfec566dc64c427, type: 3}
   Balls: []
---- !u!114 &8179098217967153840
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8179098217967153853}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 025ecf386cd8a48cd82366d1c08ed50e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Width: 10
-  Height: 10
