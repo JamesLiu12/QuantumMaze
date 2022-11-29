@@ -28,9 +28,9 @@ public class Maze
     public int Width;
     public int Height;
     public List<List<bool>> Grid = new();
-    public Cell StartPos = new Cell(1, 1);
-    public HashSet<Cell> EndPos = new HashSet<Cell>();
-
+    public Cell StartPos = new Cell(1, 0);
+    public Cell EndPos;
+    public List<List<bool>> visited = new();
     public Maze(int width, int height)
     {
         Width = width;
@@ -48,6 +48,8 @@ public class Maze
                 "positive odd numbers no less than 5.");
         }
         Grid = ListUtility.List2D(Height, Width, true);
+        EndPos = new Cell(Height - 2, Width - 1);
+        visited = ListUtility.List2D(Height, Width, false);
     }
 
     public void GenerateByPrims()
@@ -122,8 +124,25 @@ public class Maze
                     Grid[wallBeside.Row][wallBeside.Col])
                     currentWalls.Add(wallBeside);
             }
+
+            //Set Entrance and Exit
+            Grid[StartPos.Row][StartPos.Col] = false;
+            Grid[EndPos.Row][EndPos.Col] = false;
         }
     }
+
+    public Cell FindDestination(Cell startCell, Cell moveDir)
+    {
+        Cell pos = startCell;
+        for (pos = startCell + moveDir; 
+            !Equals(pos, EndPos) && !Blocked(pos + moveDir); pos += moveDir) 
+        {
+            visited[pos.Row][pos.Col] = true;
+        }
+        return pos;
+    }
+
+    private bool Blocked(Cell cell) => Grid[cell.Row][cell.Col];
 
     private bool OutOfRange(Cell node) =>
         node.Row <= 0 ||
