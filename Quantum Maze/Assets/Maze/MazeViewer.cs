@@ -68,11 +68,6 @@ public class MazeViewer : MonoBehaviour
 
     }
 
-    public Cell GetCellFromVector2(Vector2 vec2) { 
-        Vector2 relativePos = vec2 - UpperLeftPosition;
-        return new Cell((int)Math.Round(relativePos.x), (int)Math.Round(relativePos.y));
-    }
-
     public Vector2 GetVector2FromCell(Cell cell) => new Vector2(cell.Row + UpperLeftPosition.x, cell.Col + UpperLeftPosition.y);
 
     public bool CheckBallInCenter(MazeBall ball)
@@ -96,7 +91,7 @@ public class MazeViewer : MonoBehaviour
         foreach (MazeBall ball in Balls)
         {
             if (!CheckBallInCenter(ball)) continue;
-            Cell thisCell = GetCellFromVector2(new Vector2(ball.transform.position.x, ball.transform.position.y));
+            Cell thisCell = new(ball.transform.position.x, ball.transform.position.y);
             if (AlreadyGenerated[thisCell.Row][thisCell.Col]) continue;
             AlreadyGenerated[thisCell.Row][thisCell.Col] = true;
             List<Cell> neighbours = new() {

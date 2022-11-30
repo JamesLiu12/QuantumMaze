@@ -12,6 +12,12 @@ public class Cell : Tuple<int, int>
 
     public Cell(int h, int w) : base(h, w) { }
 
+    public Cell(float h, float w) :
+        base(Mathf.RoundToInt(h), Mathf.RoundToInt(w)) { }
+
+    public static Vector2 ToVector2(Cell c)
+    => new Vector2(c.Row, c.Col);
+
     public static Cell operator +(Cell a, Cell b)
     => new Cell(a.Row + b.Row, a.Col + b.Col);
 
@@ -28,13 +34,18 @@ public class Maze
     public int Width;
     public int Height;
     public List<List<bool>> Grid = new();
-    public Cell StartPos = new Cell(1, 0);
+    public Cell StartPos;
     public Cell EndPos;
     public List<List<bool>> visited = new();
+
     public Maze(int width, int height)
     {
         Width = width;
         Height = height;
+
+        StartPos = new Cell(1, 0);
+        EndPos = new Cell(Height - 2, Width - 1);
+
         Initialise();
     }
 
@@ -48,7 +59,6 @@ public class Maze
                 "positive odd numbers no less than 5.");
         }
         Grid = ListUtility.List2D(Height, Width, true);
-        EndPos = new Cell(Height - 2, Width - 1);
         visited = ListUtility.List2D(Height, Width, false);
     }
 
@@ -64,6 +74,10 @@ public class Maze
         for (int h = 1; h < Height - 1; h += 2)
             for (int w = 1; w < Width - 1; w += 2)
                 Grid[h][w] = false;
+
+        // Remove wall at the entrance and the exit
+        Grid[StartPos.Row][StartPos.Col] = false;
+        Grid[EndPos.Row][EndPos.Col] = false;
 
         // Start with the upper left cell,
         List<List<bool>> visitedCell = ListUtility.List2D(Height, Width, false);
@@ -124,10 +138,6 @@ public class Maze
                     Grid[wallBeside.Row][wallBeside.Col])
                     currentWalls.Add(wallBeside);
             }
-
-            //Set Entrance and Exit
-            Grid[StartPos.Row][StartPos.Col] = false;
-            Grid[EndPos.Row][EndPos.Col] = false;
         }
     }
 
