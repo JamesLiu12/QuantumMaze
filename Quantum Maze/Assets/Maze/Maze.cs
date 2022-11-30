@@ -143,11 +143,11 @@ public class Maze
 
     public Cell FindDestination(Cell startCell, Cell moveDir)
     {
-        Cell pos = startCell;
-        for (pos = startCell + moveDir; 
-            !Equals(pos, EndPos) && !Blocked(pos + moveDir); pos += moveDir) 
+        Cell pos = startCell + moveDir;
+        while (!Equals(pos, EndPos) && !Blocked(pos + moveDir))
         {
             visited[pos.Row][pos.Col] = true;
+            pos += moveDir;
         }
         return pos;
     }
