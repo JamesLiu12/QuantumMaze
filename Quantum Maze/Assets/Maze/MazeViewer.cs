@@ -1,131 +1,196 @@
-using System.Collections;
-using System.Collections.Generic;
-using Unity.Mathematics;
-using Unity.VisualScripting;
-using UnityEngine;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using UnityEngine;
 
-public class MazeViewer : MonoBehaviour
+namespace Maze
 {
-    public int Width = 31;
-    public int Height = 31;
-    public GameObject WallStyle;
-    public GameObject BallStyle;
-    public List<GameObject> Balls;
-    public Vector2 UpperLeftPosition;
-    private float Epsilon = 0.5f;
-    public List<List<bool>> AlreadyGenerated = new();
-
-    private Maze MazeToView;
-
-    void Start()
+    public class MazeViewer : MonoBehaviour
     {
-        Test1();
-    }
+        public int width = 31;
+        public int height = 31;
+        public GameObject wallStyle;
+        public GameObject ballStyle;
+        public float speed = 2.0f;
 
-    private void FixedUpdate()
-    {
-        //每帧都生成需要新生成的球
-        GenerateBalls();
-    }
-    private void Test1()
-    {
-        AlreadyGenerated = ListUtility.List2D(Height, Width, false);
-        MazeToView = new(Width, Height);
-        MazeToView.GenerateByPrims();
-        BuildWalls();
-        FitScreen();
-        GenerateBallAtStartPos();
-    }
-
-    public void BuildWalls()
-    {
-        foreach (Transform child in transform)
-            Destroy(child.gameObject);
-
-        UpperLeftPosition = new(
-            - 0.5f * (MazeToView.Height - 1),
-            + 0.5f * (MazeToView.Width - 1));
-
-        for (int h = 0; h < MazeToView.Height; h += 1)
-        for (int w = 0; w < MazeToView.Width; w += 1)
-        if (MazeToView.Grid[h][w])
+        public enum BallVisibility
         {
-            GameObject newWall = Instantiate(WallStyle, transform, true);
-            newWall.transform.position = UpperLeftPosition + new Vector2(w, -h);
+            All, 
+            ShowBallsCannotMove, 
+            ShowOnlyMovingBalls
         }
-    }
 
-    /// <summary>
-    /// Resize the maze so that it fits the screen
-    /// </summary>
-    public void FitScreen()
-    {
-        transform.localScale *= 0.9f * 19.5f / Height;
-    }
+        public BallVisibility ballVisibility = BallVisibility.ShowBallsCannotMove;
 
-    public void Step()
-    {
+        private Maze _maze;
+        private readonly Queue<Tuple<GameObject, Cell>> _currentMovements = new();
+        private List<List<bool>> _walked = new();
+        private Cell _destinationCell;
 
-    }
-
-    public Vector2 GetVector2FromCell(Cell cell) => new Vector2(cell.Col + UpperLeftPosition.x, -cell.Row + UpperLeftPosition.y);
-
-    public Cell GetCellFromVector2(Vector2 vec) => new Cell(Mathf.RoundToInt(-(vec.y - UpperLeftPosition.y)), Mathf.RoundToInt(vec.x - UpperLeftPosition.x));
-
-    public bool CheckBallInCenter(GameObject ball)
-    {
-        Vector3 postition = ball.transform.position;
-        Debug.Log(postition.x - Mathf.RoundToInt(postition.x));
-        Debug.Log(postition.y - Mathf.RoundToInt(postition.y));
-        return Mathf.Abs(postition.x - Mathf.RoundToInt(postition.x)) < Epsilon && Mathf.Abs(postition.y - Mathf.RoundToInt(postition.y)) < Epsilon;
-    }
-
-    public void GenerateBallAtStartPos()
-    {
-        Vector2 realPos = GetVector2FromCell(MazeToView.StartPos);
-        Vector2 destination = GetVector2FromCell(MazeToView.FindDestination(MazeToView.StartPos, Cell.Right));
-        GameObject newBall = Instantiate(BallStyle, transform, true);
-        newBall.transform.localPosition = realPos;
-        newBall.GetComponent<MazeBall>().Destination = destination;
-        Balls.Add(newBall);
-        newBall.GetComponent<MazeBall>().Move();
-        AlreadyGenerated[MazeToView.StartPos.Row][MazeToView.StartPos.Col] = true;
-        MazeToView.visited[MazeToView.StartPos.Row][MazeToView.StartPos.Col] = true;
-    }
-
-    public void GenerateBalls()
-    {
-        List<GameObject> tempBalls = new();
-        foreach (GameObject ball in Balls)
+        private void Start()
         {
-            if (!CheckBallInCenter(ball)) continue;
-            Cell thisCell = GetCellFromVector2(ball.transform.localPosition);
-            Debug.Log(thisCell);
-            if (AlreadyGenerated[thisCell.Row][thisCell.Col]) continue;
-            AlreadyGenerated[thisCell.Row][thisCell.Col] = true;
-            List<Cell> neighbours = new() {
-                new(1, 0), new(-1, 0),
-                new(0, 1), new(0, -1),
-            };
-            //在cell的位置上生成balls
-            foreach(Cell neighbour in neighbours)
+            Demonstration();
+        
+        }
+
+        private void Update()
+        {
+            // Take a step when ENTER is pressed
+            if (Input.GetKeyDown(KeyCode.Return))
             {
-                Cell newCell = thisCell + neighbour;
-                if (!MazeToView.Grid[newCell.Row][newCell.Col] && !MazeToView.visited[newCell.Row][newCell.Col])
+                // ReSharper disable Unity.PerformanceCriticalCodeInvocation
+                Step();
+                // ReSharper restore Unity.PerformanceCriticalCodeInvocation
+            }
+        }
+
+        private void Initialise()
+        {
+            _currentMovements.Clear();
+            _walked = ListUtility.List2D(height, width, false);
+            _destinationCell = new(height-2, width-1);
+        }
+    
+        private void BuildWalls()
+        {
+            foreach (Transform child in transform)
+                Destroy(child.gameObject);
+
+            Vector2 upperLeftPosition = new(
+                - 0.5f * (_maze.Height - 1),
+                + 0.5f * (_maze.Width - 1));
+
+            for (int h = 0; h < _maze.Height; h += 1)
+            for (int w = 0; w < _maze.Width; w += 1)
+                if (_maze.Grid[h][w])
                 {
-                    //generate new ball
-                    Cell cellDes = MazeToView.FindDestination(thisCell, neighbour);
-                    Vector2 destination = GetVector2FromCell(cellDes);
-                    GameObject newBall = Instantiate(BallStyle, transform, true);
-                    Debug.Log(thisCell);
-                    newBall.transform.localPosition = GetVector2FromCell(thisCell);
-                    newBall.GetComponent<MazeBall>().Destination = destination;
-                    tempBalls.Add(newBall);
-                    newBall.GetComponent<MazeBall>().Move();
+                    GameObject newWall = Instantiate(wallStyle, transform, true);
+                    newWall.transform.position = upperLeftPosition + new Vector2(w, -h);
+                }
+        }
+    
+        /// <summary>
+        /// Resize the maze so that it fits the screen
+        /// </summary>
+        private void FitScreen()
+        {
+            transform.localScale *= 0.9f * 19.5f / height;
+        }
+
+        private Vector3 LocalPositionFrom(Cell cell) => new Vector3(
+            cell.Col - width * 1.0f / 2 + 0.5f,
+            -cell.Row + height * 1.0f / 2 - 0.5f);
+
+        private void Demonstration()
+        {
+            Initialise();
+        
+            _maze = new(width, height);
+            _maze.GenerateByPrims();
+            BuildWalls();
+            FitScreen();
+        
+            // Create the new ball
+            // Start from the upper right, and the first step is to the right.
+            var initialBall = 
+                Instantiate(ballStyle, transform, false)
+                    .GetComponent<MazeBall>();
+            initialBall.speed = speed;
+            var initialCell = new Cell(1, 0);
+            var initialCellNext = new Cell(1, 1);
+        
+            // Set its start position and destination
+            initialBall.transform.localPosition = LocalPositionFrom(initialCell);
+            initialBall.destination = LocalPositionFrom(initialCellNext);
+
+            _currentMovements.Enqueue(new(initialBall.gameObject, initialCellNext));
+        
+            _walked[initialCell.Row][initialCell.Col] = true;
+            _walked[initialCellNext.Row][initialCellNext.Col] = true;
+        
+            // Make it move
+            initialBall.Move();
+        }
+
+        /// <summary>
+        /// Let all balls take a single step
+        /// This can be invoked freely by others
+        /// </summary>
+        [SuppressMessage("ReSharper", "Unity.PerformanceCriticalCodeInvocation")]
+        public void Step()
+        {
+            // Stop if there is no more step to be taken or
+            // there is a ball reached the destination
+            if (_currentMovements.Count == 0 ||
+                _walked[_destinationCell.Row][_destinationCell.Col])
+                return;
+        
+            // All balls present move in a step
+            int lastMovementsCount = _currentMovements.Count;
+            for (int _ = 0; _ < lastMovementsCount; _++)
+            {
+                // Take the old ball and destroy it
+                var oldBallMovement = _currentMovements.Dequeue();
+            
+                // Destroy the ball depends on the visibility setting
+                switch (ballVisibility)
+                {
+                    case BallVisibility.ShowOnlyMovingBalls:
+                        Destroy(oldBallMovement.Item1); break;
+                
+                    // 3 Walls and 1 walked cell around shows
+                    // the ball cannot move
+                    case BallVisibility.ShowBallsCannotMove:
+                        int wallCount = 0;
+                        int walkedCount = 0;
+                    
+                        foreach (var neighbour in Cell.Neighbours)
+                        {
+                            var neighbourCell = oldBallMovement.Item2 + neighbour;
+                            if (_maze.OutOfBound(neighbourCell))
+                                continue;
+                            if (_maze.Blocked(neighbourCell))
+                                wallCount += 1;
+                            if (_walked[neighbourCell.Row][neighbourCell.Col])
+                                walkedCount += 1;
+                        }
+
+                        if (wallCount != 3 || walkedCount != 1)
+                            Destroy(oldBallMovement.Item1);
+                        break;
+
+                    case BallVisibility.All: break;
+                }
+            
+                // Any new ball will start at the old ball's destination
+                var startCell = oldBallMovement.Item2;
+            
+                // Check 4 neighbour cells
+                foreach (var neighbourCell in Cell.Neighbours)
+                {
+                    var nextCell = startCell + neighbourCell;
+                
+                    // Ignore any cell walked or in the wall
+                    if (_maze.Blocked(nextCell) || 
+                        _walked[nextCell.Row][nextCell.Col]) 
+                        continue;
+                
+                    // Create the new ball
+                    var newBall = Instantiate(ballStyle, transform, false).GetComponent<MazeBall>();
+                    newBall.speed = speed;
+                
+                    // Set its start position and destination
+                    newBall.transform.localPosition = LocalPositionFrom(startCell);
+                    newBall.destination = LocalPositionFrom(nextCell);
+                
+                    _currentMovements.Enqueue(new(newBall.gameObject, nextCell));
+
+                    _walked[nextCell.Row][nextCell.Col] = true;
+                
+                    // Make it move
+                    newBall.Move();
                 }
             }
         }
-        foreach (GameObject ball in tempBalls) Balls.Add(ball);
     }
 }

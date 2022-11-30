@@ -1,26 +1,38 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class MazeBall : MonoBehaviour
+namespace Maze
 {
-    public Vector3 Destination;
-    public bool Moving = false;
-    public float Speed = 1.0f;
-    public float Epsilon = 0.05f;
-
-    void FixedUpdate()
+    public class MazeBall : MonoBehaviour
     {
-        if (!Moving) return;
+        public Vector3 destination;
+        public bool moving;
+        public float speed = 2.0f;
+        public float epsilon = 0.1f;
 
-        Vector3 positionDifference = Destination - transform.localPosition;
-        if (positionDifference.magnitude <= Epsilon) return;
+        void FixedUpdate()
+        {
+            if (!moving) return;
+        
+            Vector3 direction = destination - transform.localPosition;
+            if (direction.magnitude < epsilon)
+            {
+                transform.localPosition = destination;
+                Stop();
+                return;
+            }
 
-        Vector3 velocity = positionDifference * Speed;
-        transform.localPosition += velocity * Time.deltaTime;
+            Vector3 normalizedDirection = direction.normalized;
+            transform.position += normalizedDirection * (speed * Time.deltaTime);
+        }
+
+        public void Move()
+        {
+            moving = true;
+        }
+
+        public void Stop()
+        {
+            moving = false;
+        }
     }
-
-    public void Move() { Moving = true; }
-
-    public void Stop() { Moving = false; }
 }
