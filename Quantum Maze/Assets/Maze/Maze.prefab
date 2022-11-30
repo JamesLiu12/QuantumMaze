@@ -47,4 +47,6 @@ MonoBehaviour:
   Width: 31
   Height: 31
   WallStyle: {fileID: 5676772466091745337, guid: 4a0c3cb72421f4d23bfec566dc64c427, type: 3}
+  BallStyle: {fileID: 5984782421246539838, guid: f1ee9f13c5af14a02a47742a3dd0612f, type: 3}
   Balls: []
+  UpperLeftPosition: {x: 0, y: 0}

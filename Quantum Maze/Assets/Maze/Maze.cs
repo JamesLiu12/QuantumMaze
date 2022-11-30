@@ -15,10 +15,10 @@ public class Cell : Tuple<int, int>
     public Cell(float h, float w) :
         base(Mathf.RoundToInt(h), Mathf.RoundToInt(w)) { }
 
-    public static Cell Right = new(1, 0);
-    public static Cell Left = new(-1, 0);
-    public static Cell Up = new(0, -1);
-    public static Cell Down = new(0, 1);
+    public static Cell Right = new(0, 1);
+    public static Cell Left = new(0, -1);
+    public static Cell Up = new(-1, 0);
+    public static Cell Down = new(1, 0);
 
     public static Vector2 ToVector2(Cell c)
     => new Vector2(c.Row, c.Col);
@@ -154,6 +154,7 @@ public class Maze
             visited[pos.Row][pos.Col] = true;
             pos += moveDir;
         }
+        visited[pos.Row][pos.Col] = true;
         return pos;
     }
 

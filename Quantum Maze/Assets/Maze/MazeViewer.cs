@@ -11,9 +11,9 @@ public class MazeViewer : MonoBehaviour
     public int Height = 31;
     public GameObject WallStyle;
     public GameObject BallStyle;
-    public List<MazeBall> Balls;
+    public List<GameObject> Balls;
     public Vector2 UpperLeftPosition;
-    private float Epsilon = 0.05f;
+    private float Epsilon = 0.5f;
     public List<List<bool>> AlreadyGenerated = new();
 
     private Maze MazeToView;
@@ -23,7 +23,7 @@ public class MazeViewer : MonoBehaviour
         Test1();
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
         //每帧都生成需要新生成的球
         GenerateBalls();
@@ -35,6 +35,7 @@ public class MazeViewer : MonoBehaviour
         MazeToView.GenerateByPrims();
         BuildWalls();
         FitScreen();
+        GenerateBallAtStartPos();
     }
 
     public void BuildWalls()
@@ -68,30 +69,39 @@ public class MazeViewer : MonoBehaviour
 
     }
 
-    public Vector2 GetVector2FromCell(Cell cell) => new Vector2(cell.Row + UpperLeftPosition.x, cell.Col + UpperLeftPosition.y);
+    public Vector2 GetVector2FromCell(Cell cell) => new Vector2(cell.Col + UpperLeftPosition.x, -cell.Row + UpperLeftPosition.y);
 
-    public bool CheckBallInCenter(MazeBall ball)
+    public Cell GetCellFromVector2(Vector2 vec) => new Cell(Mathf.RoundToInt(-(vec.y - UpperLeftPosition.y)), Mathf.RoundToInt(vec.x - UpperLeftPosition.x));
+
+    public bool CheckBallInCenter(GameObject ball)
     {
         Vector3 postition = ball.transform.position;
-        return Math.Abs(postition.x - (int)postition.x) < Epsilon && Math.Abs(postition.y - (int)postition.y) < Epsilon;
+        Debug.Log(postition.x - Mathf.RoundToInt(postition.x));
+        Debug.Log(postition.y - Mathf.RoundToInt(postition.y));
+        return Mathf.Abs(postition.x - Mathf.RoundToInt(postition.x)) < Epsilon && Mathf.Abs(postition.y - Mathf.RoundToInt(postition.y)) < Epsilon;
     }
 
     public void GenerateBallAtStartPos()
     {
         Vector2 realPos = GetVector2FromCell(MazeToView.StartPos);
-        //...Instantiate at realPos
-        Vector2 destination = GetVector2FromCell(MazeToView.FindDestination(MazeToView.StartPos, Cell.Down));
-        Balls.Add(new MazeBall(destination));
+        Vector2 destination = GetVector2FromCell(MazeToView.FindDestination(MazeToView.StartPos, Cell.Right));
+        GameObject newBall = Instantiate(BallStyle, transform, true);
+        newBall.transform.localPosition = realPos;
+        newBall.GetComponent<MazeBall>().Destination = destination;
+        Balls.Add(newBall);
+        newBall.GetComponent<MazeBall>().Move();
         AlreadyGenerated[MazeToView.StartPos.Row][MazeToView.StartPos.Col] = true;
         MazeToView.visited[MazeToView.StartPos.Row][MazeToView.StartPos.Col] = true;
     }
 
     public void GenerateBalls()
     {
-        foreach (MazeBall ball in Balls)
+        List<GameObject> tempBalls = new();
+        foreach (GameObject ball in Balls)
         {
             if (!CheckBallInCenter(ball)) continue;
-            Cell thisCell = new(ball.transform.position.x, ball.transform.position.y);
+            Cell thisCell = GetCellFromVector2(ball.transform.localPosition);
+            Debug.Log(thisCell);
             if (AlreadyGenerated[thisCell.Row][thisCell.Col]) continue;
             AlreadyGenerated[thisCell.Row][thisCell.Col] = true;
             List<Cell> neighbours = new() {
@@ -107,11 +117,15 @@ public class MazeViewer : MonoBehaviour
                     //generate new ball
                     Cell cellDes = MazeToView.FindDestination(thisCell, neighbour);
                     Vector2 destination = GetVector2FromCell(cellDes);
-                    MazeBall newBall = new MazeBall(new Vector3(destination.x, destination.y, 0));
-                    Balls.Add(newBall);
-                    //...Instantiate at thisCell
+                    GameObject newBall = Instantiate(BallStyle, transform, true);
+                    Debug.Log(thisCell);
+                    newBall.transform.localPosition = GetVector2FromCell(thisCell);
+                    newBall.GetComponent<MazeBall>().Destination = destination;
+                    tempBalls.Add(newBall);
+                    newBall.GetComponent<MazeBall>().Move();
                 }
             }
         }
+        foreach (GameObject ball in tempBalls) Balls.Add(ball);
     }
 }
