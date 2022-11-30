@@ -80,7 +80,7 @@ public class MazeViewer : MonoBehaviour
     {
         Vector2 realPos = GetVector2FromCell(MazeToView.StartPos);
         //...Instantiate at realPos
-        Vector2 destination = GetVector2FromCell(MazeToView.FindDestination(MazeToView.StartPos, new Cell(0, 1)));
+        Vector2 destination = GetVector2FromCell(MazeToView.FindDestination(MazeToView.StartPos, Cell.Down));
         Balls.Add(new MazeBall(destination));
         AlreadyGenerated[MazeToView.StartPos.Row][MazeToView.StartPos.Col] = true;
         MazeToView.visited[MazeToView.StartPos.Row][MazeToView.StartPos.Col] = true;
