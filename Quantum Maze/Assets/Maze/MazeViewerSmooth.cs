@@ -64,12 +64,12 @@ namespace Maze
             Vector2 upperLeftPosition = new(
                 - 0.5f * (_maze.Height - 1),
                 + 0.5f * (_maze.Width - 1));
-            while (_maze.BallAppearInfoQueue.Count > 0)
+            while (_maze.BallAppearInfoQueue.Count > 0 &&
+                   _maze.BallAppearInfoQueue[0].TimeAppear <= Time.fixedTime - _startTime)
             {
-                if (_maze.BallAppearInfoQueue[0].TimeAppear > Time.fixedTime - _startTime) break;
                 BallInfo thisAppearInfo = _maze.BallAppearInfoQueue[0];
                 _maze.BallAppearInfoQueue.RemoveAt(0);
-                GameObject newBall = Instantiate(ballStyle, transform, true);
+                GameObject newBall = Instantiate(ballStyle, transform, false);
                 newBall.transform.localPosition = upperLeftPosition +
                                              new Vector2(thisAppearInfo.AppearPosition.Col,
                                                  -thisAppearInfo.AppearPosition.Row);
