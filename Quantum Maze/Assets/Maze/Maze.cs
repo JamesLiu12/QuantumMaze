@@ -40,6 +40,9 @@ namespace Maze
 
         public static bool Equals(Cell a, Cell b)
             => a.Row == b.Row && a.Col == b.Col;
+
+        public static float Distance(Cell a, Cell b)
+            => Mathf.Sqrt((b.Row - a.Row) * (b.Row - a.Row) + (b.Col - a.Col) * (b.Col - a.Col));
     };
 
     public class Maze
@@ -49,16 +52,16 @@ namespace Maze
         public readonly int Height;
         public List<List<bool>> Grid = new();
     
-        private readonly Cell _startPos;
-        private readonly Cell _endPos;
+        protected readonly Cell StartPos;
+        protected readonly Cell EndPos;
 
         public Maze(int width, int height)
         {
             Width = width;
             Height = height;
 
-            _startPos = new Cell(1, 0);
-            _endPos = new Cell(Height - 2, Width - 1);
+            StartPos = new Cell(1, 0);
+            EndPos = new Cell(Height - 2, Width - 1);
 
             Initialise();
         }
@@ -87,8 +90,8 @@ namespace Maze
                 Grid[h][w] = false;
 
             // Remove wall at the entrance and the exit
-            Grid[_startPos.Row][_startPos.Col] = false;
-            Grid[_endPos.Row][_endPos.Col] = false;
+            Grid[StartPos.Row][StartPos.Col] = false;
+            Grid[EndPos.Row][EndPos.Col] = false;
 
             // Start with the upper left cell,
             List<List<bool>> visitedCell = ListUtility.List2D(Height, Width, false);
