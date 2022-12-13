@@ -18,10 +18,12 @@ namespace Maze
         public Cell(float row, float col) :
             base(Mathf.RoundToInt(row), Mathf.RoundToInt(col)) { }
 
-        public static Cell Right = new(0, 1);
-        public static Cell Left = new(0, -1);
-        public static Cell Up = new(-1, 0);
-        public static Cell Down = new(1, 0);
+        public Cell(Cell cell) : base(cell.Row, cell.Col) { }
+
+        public static readonly Cell Right = new(0, 1);
+        public static readonly Cell Left = new(0, -1);
+        public static readonly Cell Up = new(-1, 0);
+        public static readonly Cell Down = new(1, 0);
     
         // Ways of movement a cell can make each time
         public static readonly List<Cell> Neighbours = new() {
@@ -43,6 +45,9 @@ namespace Maze
 
         public static float Distance(Cell a, Cell b)
             => Mathf.Sqrt((b.Row - a.Row) * (b.Row - a.Row) + (b.Col - a.Col) * (b.Col - a.Col));
+
+        public static Cell operator -(Cell a)
+            => new Cell(-a.Row, -a.Col);
     };
 
     public class Maze

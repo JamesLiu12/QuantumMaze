@@ -27,8 +27,8 @@ namespace Maze
         public Cell MoveDir => Item2;
         public float TimeAtPos => Item3;
         
-        public MoveInfo(Cell deletePosition, Cell moveDir, float timeDelete) 
-            : base(deletePosition, moveDir, timeDelete) { }
+        public MoveInfo(Cell deletePosition, Cell moveDir, float timeAtPos) 
+            : base(deletePosition, moveDir, timeAtPos) { }
     }
     
     public class MazeSmooth : Maze
@@ -37,8 +37,8 @@ namespace Maze
         public List<BallInfo> BallDeleteInfoQueue;
 
         public MazeSmooth(int width, int height) : base(width, height) { }
-        
-        public float GetMoveTime(Cell startPos, Cell endPos, Cell midPos)
+
+        private float GetMoveTime(Cell startPos, Cell endPos, Cell midPos)
         {
             float wholeDistance = Cell.Distance(startPos, endPos);
             float generateDistance = Cell.Distance(startPos, midPos);
@@ -51,7 +51,6 @@ namespace Maze
         {
             BallAppearInfoQueue = new();
             BallDeleteInfoQueue = new();
-            List<List<bool>> visited = ListUtility.List2D(Height, Width, false);
             Queue<MoveInfo> bfsQueue = new();
             bfsQueue.Enqueue(new(StartPos, Cell.Right, 0));
             while (bfsQueue.Count > 0)
@@ -75,11 +74,11 @@ namespace Maze
                 if (numberWays > 1)
                     BallDeleteInfoQueue.Add(new(preStartCell, preDestination, preMoveTime, preMoveTime + preTimeNeeded));
             }
-            BallAppearInfoQueue.Sort(new ISortBallInfoByAppearTime());
-            BallDeleteInfoQueue.Sort(new ISortBallInfoByDeleteTime());
+            BallAppearInfoQueue.Sort(new SortBallInfoByAppearTime());
+            BallDeleteInfoQueue.Sort(new SortBallInfoByDeleteTime());
         }
 
-        public void GenerateBallsinPath(MoveInfo startMoveInfo, Cell destination, Queue<MoveInfo> bfsQueue)
+        private void GenerateBallsinPath(MoveInfo startMoveInfo, Cell destination, Queue<MoveInfo> bfsQueue)
         {
             Cell startCell = startMoveInfo.Position;
             Cell moveDir = startMoveInfo.MoveDir;
@@ -99,9 +98,9 @@ namespace Maze
                 curCell += moveDir;
             }
         }
-        
-        
-        public Cell FindDestination(Cell startCell, Cell moveDir)
+
+
+        private Cell FindDestination(Cell startCell, Cell moveDir)
         {
             Cell pos = startCell + moveDir;
             while (!Equals(pos, EndPos) && !OutOfBound(pos + moveDir) && !Blocked(pos + moveDir)) 
@@ -110,13 +109,13 @@ namespace Maze
         }
     }
 
-    public class ISortBallInfoByAppearTime : IComparer<BallInfo>
+    public class SortBallInfoByAppearTime : IComparer<BallInfo>
     {
         public int Compare(BallInfo a, BallInfo b) 
             => a.TimeAppear.CompareTo(b.TimeAppear);
     }
 
-    public class ISortBallInfoByDeleteTime: IComparer<BallInfo>
+    public class SortBallInfoByDeleteTime: IComparer<BallInfo>
     {
         public int Compare(BallInfo a, BallInfo b)
             => a.TimeDelete.CompareTo(b.TimeDelete);
