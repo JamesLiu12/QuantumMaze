@@ -6,7 +6,7 @@ namespace Maze
 {
     public class MazeBallDepth : MazeBall
     {
-        public static readonly float baseVelocity = 15.0f;
+        public static readonly float baseVelocity = 10.0f;
         public static readonly float Epsilon = 0.05f;
         void FixedUpdate()
         {
