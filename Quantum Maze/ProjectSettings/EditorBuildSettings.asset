@@ -14,4 +14,16 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/MainSmooth.unity
     guid: bb909a2117bbea0479e95ce2cf90fa63
+  - enabled: 1
+    path: Assets/Scenes/Quantum (step by step).unity
+    guid: 8c9cfa26abfee488c85f1582747f6a02
+  - enabled: 1
+    path: Assets/Scenes/Quantum (auto).unity
+    guid: bb909a2117bbea0479e95ce2cf90fa63
+  - enabled: 1
+    path: Assets/Scenes/Classical BFS.unity
+    guid: 58ca38767b439994d9b13ad91c351539
+  - enabled: 1
+    path: Assets/Scenes/Classical DFS.unity
+    guid: 0fee852e9ef5467499f447c783de27bd
   m_configObjects: {}
